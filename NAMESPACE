@@ -1,0 +1,5 @@
+export("deming", "pbreg", "thielsen")
+import("boot")
+S3method(print, deming)
+S3method(print, pbreg)
+S3method(print, thielsen)
