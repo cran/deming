@@ -1,0 +1,15 @@
+This is source code for part of the package written in noweb.  It allows for
+much more extensive documentation of the mathematical aspects of the code
+by wrapping it into a latex document.  You will want to have the "noweb"
+R package installed on your machine to make changes.
+
+"make fun" extracts the embedded R code and places a copy in ../R.  Make sure
+to run this before submitting a new version to CRAN.  We don't do this
+automatically via a ../configure script so that those who are installing
+from source, but not modifying it, do not need to have to have the noweb
+package installed.  Even more importantly, it means that I don't have to
+a Makefile that works on all possible hardware.  The ../cleanup script is
+run by R CMD build, so again the Makefile only needs to be valid for my machine.
+
+"make deming.pdf" creates a pdf version of the code.  This is the version 
+intended for human consumption.  

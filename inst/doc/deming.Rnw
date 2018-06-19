@@ -114,13 +114,13 @@ This latter is rarely if ever true for biologic assays.
 Figure \ref{ferritinb} shows a Bland-Altman plot of paired assay results
 from long-term monitoring of a ferritin assay.
 Each time that a new lot of the principle reagent was brought into use, 
-a subset of current
+a subset of currently available
 samples were assayed in duplicate using both the old and new lot.
 If the assumptions of standard Deming regression hold we would expect to
-see approximately constant vertical variation across the range of the X
-axis of the plot.  This is clearly not the case.
-The x-axis was plotted on a square root scale to spread out the data somewhat,
-but this does not change the message.
+see approximately constant vertical variation across the range of the
+horizontal axis of the plot.  This is clearly not the case.
+(The x-axis was plotted on a square root scale to spread out the data somewhat,
+but this does not change the message.)
 <<f2, echo=TRUE, fig=TRUE, include=FALSE>>=
 f.ave <- with(ferritin, (old.lot + new.lot)/2)
 f.diff<- with(ferritin, old.lot - new.lot)
@@ -169,8 +169,8 @@ The \code{cv} argument of the \code{deming} function chooses between these
 two cases, or all four constants can be supplied using the
 \code{stdpat} argument.
 A second alternative is for the user to directly supply 
-values for ${\rm sd}(x)$ or ${\rm sd}(y)$ using the \code{xstd} and 
-\code{ystd} arguments.
+values for ${\rm sd}(x)$ or ${\rm sd}(y)$ for each data point
+using the \code{xstd} and \code{ystd} arguments.
 The following produces the 7 calibration equations for each of the 7 reagent
 changes in the ferritin data set.
 <<>>=
@@ -185,7 +185,28 @@ for (i in 1:7) {
 dimnames(cmat) <- list(c("Intercept", "old.lot", "old.lot (LS)") , 1:7)
 round(cmat,3)
 @ 
-
+For unweighted regression the Deming slope is always larger than the
+least squares line but in the constant CV case it can go either way.
+The difference in regression slopes for any given batch is small, but
+corrections to the clinical assay must be cumulative over time.
+From the first regression equation, results from assays after the first lot
+change need to be modified with 
+\begin{center}
+  corrected result = 
+\Sexpr{round(cmat[1,1],3)} + \Sexpr{round(cmat[2,1], 3)} * value
+\end{center}
+in order to have them match prior reports.
+Matching is important since a given patient may be followed sequentially over
+many years.
+The second assay change compounds this
+\begin{center}
+   corrected result = \Sexpr{round(cmat[1,1],3)} + \Sexpr{round(cmat[2,1], 3)}*
+     ( \Sexpr{round(cmat[1,2],3)} +  \Sexpr{round(cmat[2,2], 3)} *value)
+   \end{center}
+The cumulative effect under the Deming fits has a slope coefficient of
+\Sexpr{round(prod(cmat[2,]), 3)}, the product of the 7 slopes,
+an estimated loss in potency of 21\%.
+  
 When the data has both a wide range and results near zero, 
 it will often be necessary for the error to include both a constant and
 a proportional portion.  
@@ -203,13 +224,13 @@ afit
 dfit <- deming(aas ~ aes, arsenate)
 lfit <- lm(aas ~ aes, arsenate)
 temp <- cbind(coef(afit), coef(dfit), coef(lfit))
-dimnames(temp)[[2]] <- c("Ripley", "Deming", "Linear")
+dimnames(temp)[[2]] <- c("weighted Deming", "unweighted Deming", "Linear")
 round(temp,3)
 @ 
 For values less than .3 (about 10\% of the data) 
 the constant part of the error is
-predominant while for those above 2 the proportional part is the largest.
-The calibration fits that do or do not properly account for the error
+predominant while for those above 2 the proportional part dominates.
+Calibration fits that do or do not properly account for the error
 differ by important amounts.
 
 \section{Theil-Sen Regression}
@@ -220,17 +241,18 @@ $r(\beta)$ are the residuals from a fitted line with slope $\beta$.
 A non-parametric counterpoint to this is Thiel-Sen regression, which satisfies
 $\tau(x, r(\beta)) =0$ where $\tau$ is Kendall's tau, 
 a rank based alternative to the correlation coefficient.
-This was proposed by Theil \cite{Theil50},
+This was proposed by Theil \cite{Theil50};
 Sen \cite{Sen68} extended the results and added a confidence interval estimate.
 The approach is well known in selected fields (e.g. astronomy), 
 and almost completely unknown in others.
 It has strong resistance to outliers and nearly full efficiency compared to
 linear regression when the errors are Gaussian.
 
-To calculate the TS regression fit first
+One way to calculate the TS regression is to first
 draw a line segment between each of the $n(n-1)/2$ unique pairs of points in
 the data; the TS slope estimate is the median of these $n(n-1)/2$ slope values.
-
+Once the slope is established the intercept is chosen so that the median 
+residual is zero.
 \begin{figure}
   \myfig{deming-f4}
   \caption{The geometry underlying the Thiel-Sen estimator.
@@ -257,23 +279,25 @@ text(c(2 ,4, -2, -3), c(5, -4, -5, 4), c("I", "II", "III", "IV"))
 Figure \ref{f4} shows a plot of $x_i - x_j$ vs $y_i-y_j$ for all 
 $8*7=56$ data pairs from a small set of 8 data points.
 A line from the origin to each point has identical angle to a line
-connecting that pair of points in a plot of 8 original $(x,y)$ pairs.
-Each pair of points $i,j$ appears twice in the paired plot, corresponding once to
+connecting that pair of points in a plot of the 8 original $(x,y)$ pairs.
+Each pair of points $i,j$ appears twice in the paired plot, 
+corresponding once to
 $y_i - y_j$ and a second time using $y_j - y_i$. 
 The Thiel-Sen estimate of slope is that line through the origin such that
 quadrants 1--4 of the plot, formed by this line and the vertical axis,
 each have the same number of points.
 The solution is simply \code{median(atan(dy/dx))} where \code{dy} and
 \code{dx} are the paired $y$ and $x$ differences, respectively.
-Since $(y_i-y_j)/(x_i-x_j) = (y_j-y_i)/(x_j-x_i)$ the code only uses the
+Since $(y_i-y_j)/(x_i-x_j) = (y_j-y_i)/(x_j-x_i)$ the 
+computer program only uses the
 $n(n-1)/2$ unique values, removing any which lie exactly on the vertical
 axis since they would count equally in two quadrants and thus cancel.
 Theil-Sen regression of $x$ on $y$ would use the horizontal axis, rather than
-vertical, as the reference for forming quadrants.
+vertical, as the second reference line for forming quadrants.
 
 \section{Passing-Bablock Regression}
 The Thiel-Sen slope, like ordinarly least squares, is biased towards zero
-if there is error in both $x$ and $y$, and like ordinary LS it is not
+if there is error in both $x$ and $y$, nor is it
 symmetric in $x$ and $y$.
 Passing and Bablock proposed variations on the Thiel-Sen estimate to
 address these concerns.
@@ -286,7 +310,7 @@ in 1983, 1984, and 1988.
   \myfig{deming-f5}
   \caption{The geometry underlying the Passing-Bablock estimate..
     The set of values $x_i-x_j$ is plotted versus $y_i-y_j$ for all
-    $i \ne j$.  The reference line with slope -1 (black) and the estimated
+    $i \ne j$.  A reference line with slope -1 (black) and the estimated
     PB slope coefficent (red) divide the points into 4 equal groups.}
   \label{f5}
 \end{figure}
@@ -308,9 +332,12 @@ The first Passing-Bablock method (PB1) is described in their 1983 paper
 \cite{Passing83}. It modifies the Thiel-Sen estimate so as
 to make the procedure symmetric about the line $y=x$
 instead of about the horizontal axis.
-To do so replace the vertical axis of figure \ref{f4} with the line $y= -x$ as
-the second reference for forming the four quadrants
-as shown in figure \ref{f5}.
+Where a Thiel-Sen regression of $y$ on $x$ uses the regression line plus the
+vertical axis to partition the points, and TS regression of $x$ on $y$ would
+use the regression line plus the horizontal axis,
+the Passing-Bablock line chooses that regression line such that it and
+the $y= -x$ line separate the data points into 4 equal portions.
+This is illustrated in figure \ref{f5}.
 Computationally, it suffices to modify the $\arctan$ function 
 so as to return angles in the range
 of $(-\pi/4, 3\pi/4)$ instead of the default of $(-\pi/2, \pi/2)$.  The kernel
@@ -326,7 +353,7 @@ quadrants so can be ignored.
 (Since both $x$ and $y$ are measured with error such values should be rare
 in real data.)
 As with the Theil-Sen estimate, the underlying R routine only evaluates and
-uses points in quadrants I and II.
+uses the $n(n-1)/2$ unique pairs.
 
 For a two-sided confidence interval Passing and Bablock
 use an identical formula to
@@ -341,106 +368,59 @@ that this method has excellent power, nearly as good as
 Deming regression when the data has Gaussian errors,
 while gaining resistance to outliers.
 
-The PB1 estimate is symmetric in $x$ and $y$, but it is also biased 
-towards a slope of 1 to the
-same extent as the Theil-Sen estimate is biased towards 0.
-It is also not scale invariant: if all of the $y$ values for a dataset are
-multipled by some constant $k$ the recomputed slope does not
-necessarily equal $k\beta$.
+
+A second approach to the Passing-Bablock estimate, and one that
+is more informative with respect to extending the method,
+is based on another property of Deming regression:
+the slope of the Deming regression line is that rotation of
+the original data such that a least-squares regression on 
+the rotated data has a slope of zero.
+A symmetric Thiel-Sen (STS) estimate can then be defined as that rotation
+of the original data set such that the Thiel-Sen estimate of slope is zero.
+A simple iterative algorithm to compute this is to
+compute the TS estimate, rotate the original data by the resulting
+angle, and continue refitting and further rotation until convergence.
+Geometrically, the STS estimate corresponds to a pair of orthagonal lines
+that partition the points of figure 4 equally.
+ 
+The PB1 estimate can be viewed as a one step approximation to the STS estimate
+above: start with a clockwise rotation of $\pi/4$ (45 degrees) 
+and then do a singe iteration of refinement. 
+Since it is based on a single Thiel-Sen regression the theoretical
+justification for the Thiel-Sen confidence
+interval formula translates directly to the Passing-Bablock estimate.
+For all of the data sets considered thus far the STS algorithm converges in
+2 or 3 iterations, and the PB1 estimator reaches the same or very nearly the
+same value as the fully iterated estimate.
+
+Neither the Deming, STS, nor PB1 estimates of slope are scale invariant.
+Starting with a data set whose slope estimate is $\hat\beta$, multiplication
+of all the $y$ values by some constant $k$ does not necessarily lead to
+an estimated slope of $k \hat\beta$.
 In the third paper of their series \cite{Passing88}
 two further estimators PB2 and PB3
-are proposed which are scale invariant, while retaining
+are proposed which are scale invariant while still retaining
 symmetry in $x$ and $y$. 
 For the PB2 estimate, first find a value $m$ which is the median of the angles
 in the lower right portion of figure \ref{f5}, i.e. points with
-$dy <0$ and $dx >0$.
-Then remap the $\theta$ values to lie in the interval $(m, m+\pi)$ before
-taking the median, i.e.,
-we use the line with slope $m$ as our second reference in defining the four
-quadrants.
+$dy <0$ and $dx >0$.  
+The estimated regression line is defined such that it and a line of angle $m$ 
+partition the points equally.
+It can also be viewed as a 1 step STS estimator using $\pi/2 + m$ as the
+initial clockwise rotatation.
 
-The PB3 estimate is defined self referentially such that $\hat \beta$ is the
-median angle after mapping $\theta$ into the range 
-$(-\hat\beta, -\hat\beta + \pi)$.  
-Referring to figure \ref{f4} or \ref{f5}, 
-a pair of lines at angles $\beta$ and $-\beta$ are
+The PB3 estimate is defined by two lines.
+Referring again to figure \ref{f4} or \ref{f5}, 
+a pair of lines at angles $\theta$ and $-\theta$ are
 opened and shut like a pair of scissors about the $x$-axis until they
-enclose 1/2 of the data points.
+evenly partition the data points, then $\theta$ taken as the estimated slope.
 Passing and Bablock describe an iterative estimation procedure, however it
 is easy to see that \code{median(abs(theta))} provides a direct solution.
+The PB3 estimator is not a simple one-step approximation to the symmetric
+Thiel-Sen (STS) estimate.
 
-\section{Other estimates}
-Another approach to modifying the Thiel-Sen estimate is to directly
-mimic one of the definitions of the Deming estimate, namely as the solution to
-an estimating equation.
-The angle $\theta$ of the Deming regression line is that rotation of
-the original data set such that $\rho(x^*, y^*)=0$ where $x^*, y^*$ are
-the rotated data points
-\begin{align*}
-  x^* &= y \sin(\theta) + x \cos(\theta)  \\
-  y^* &= y \cos(\theta) - x \sin(\theta)
-\end{align*}
-Similarly we can define a \emph{circularly symmetric} Thiel-Sen
-estimate (STS) as that angle $\theta$ such that $\tau(x^*, y^*) =0$.
-Equivilantly, the Deming estimate is that rotation such that a 
-least squares slope for
-the rotated data would be zero, and the STS estimate is that rotation for
-which the Theil-Sen slope would be zero.
-
-An iterative algorithm for finding the optimal rotation would be the following:
-\begin{enumerate}
-  \item Rotate by some starting estimate $\phi$
-  \item Compute the Theil-Sen regression for the rotated data,
-    with resulting angle $\theta$
-  \item Rotate the data further by $\theta$, if $\theta \ne 0$
-    return to step 2.
-\end{enumerate}
-Passing-Bablock methods 1 and 2 can be viewed as one step approximations 
-to the STS estimate that use 
-$\phi = -\pi/2$ and $\phi = m$ as their starting estimates.
-Not surprisingly, for data that clusters tightly about a line this first
-step is nearly sufficient and the
-STS and PB1 or PB2 estimators differ only slightly.
-
-Referring again to figures \ref{f4} and  \ref{f5}, 
-the STS solution will be that pair of
-\emph{orthagonal} axes that divides the data into four equal portions.
-It is easy to verify that rotation of the original data cloud
-by some angle $\phi$ results in the rotation of figure \ref{f4}
-by precisely the same amount; Kendall's $\tau$ for the rotated data will be 0
-if the count of points in the 4 quadrants formed by the vertical and
-horizontal axes are identical.
-The R code efficiently enumerates all $n(n-1)/2$ possible rotations.
-
-\begin{figure}
-  \myfig{deming-f6}
-  \caption{Solution trace of the algorithm for the simple test data
-    set (points) and for the larger arsenate data set as a connected line.}
-  \label{f6}
-\end{figure}
-<<f6, echo=FALSE, fig=TRUE, include=FALSE>>=
-zfun <- function(x, y) {
-    xx <- outer(x, x, '-')
-    yy <- outer(y, y, '-')
-    xx <- xx[row(xx) > col(xx)]
-    yy <- yy[row(yy) > col(yy)]
-    theta <- atan(yy/xx)
-    angle <- ifelse(theta >0, theta, theta + pi/2) #in/out angle
-    change<- ifelse(theta >0, 1, -1)
-    indx <- order(angle)
-    list (x= c(0, angle[indx])* 180/pi, 
-          y= (sum(theta<0) + c(0, cumsum(change[indx])))/ length(theta))
-}
-plot(zfun(arsenate$aas, arsenate$aes), type='l',
-     xlab="Angle", ylab="Fraction included")
-points(zfun(tdata$x, tdata$y))
-abline(.5,0)   
-@  
-Figure \ref{f6} shows a plot of the fraction of points inside one quadrant
-as we rotate from 0 to 90 degrees in computing the
-circularly symmetrc estimate.  The solution is that angle where the
-graph crosses 1/2.
-Unlike the other estimates considered so far the STS estimate can
+\section{Other notes}
+Unlike the other estimates found in the package the STS estimate can
 have multiple zeros.
 For a data set like the arsenate study, where the overall data clusters
 tightly around a line, multiple solutions are uncommon, and when they
@@ -448,15 +428,15 @@ occur normally form a small tight cluster of values.
 The other extreme is a set of points evenly distributed in cirle about
 the origin, for which there will be $n$ solutions.
 When multiple solutions occur the program returns the value of that one
-having the smalled MAD of the residuals.
-The output structure also
-includes all
-of the solutions in its \code{angle} component.
+having the smallest MAD of the residuals.
+The output structure includes an additional component \code{angle} 
+containing the full set of solutions.
 
-For the PB2, PB3 and STS methods it is not clear 
+For the PB2, PB3 and STS methods it is not at all certain
 that the Sen estimator of
-confidence limits is valid.  Since they are not based on starting with a 
-prespecified 1/2 of the plane a 1 to 1 mapping between the slope and
+confidence limits is valid.  
+Since they are are iterative the
+1 to 1 mapping between the slope and
 Kendall's tau which forms the basis for Sen's argument no longer holds.
 Secondly,
 extending the Sen variance formula to data with case weights is far from clear. 
@@ -465,8 +445,7 @@ also include an option for bootstrap confidence
 intervals, and we recommend using it whenever there are case weights or
 for the STS, PB2, and PB3 estimators.
 Due to the excessive number of ties that would be generated by ordinary
-bootstrap sampling the wild
-bootstrap method \cite{Wu86} is used.
+bootstrap sampling the wild bootstrap method \cite{Wu86} is used.
 
 \section{Which method is best?}
 

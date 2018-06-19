@@ -58,7 +58,7 @@ round(cmat,3)
 
 
 ###################################################
-### code chunk number 5: deming.Rnw:199-207
+### code chunk number 5: deming.Rnw:220-228
 ###################################################
 afit <- deming(aas ~ aes, arsenate, xstd=se.aes, ystd=se.aas)
 afit
@@ -66,7 +66,7 @@ afit
 dfit <- deming(aas ~ aes, arsenate)
 lfit <- lm(aas ~ aes, arsenate)
 temp <- cbind(coef(afit), coef(dfit), coef(lfit))
-dimnames(temp)[[2]] <- c("Ripley", "Deming", "Linear")
+dimnames(temp)[[2]] <- c("weighted Deming", "unweighted Deming", "Linear")
 round(temp,3)
 
 
@@ -105,29 +105,7 @@ text(c(0 ,5, 0, -6), c(5, -1, -5, 2), c("I", "II", "III", "IV"))
 
 
 ###################################################
-### code chunk number 8: f6
-###################################################
-getOption("SweaveHooks")[["fig"]]()
-zfun <- function(x, y) {
-    xx <- outer(x, x, '-')
-    yy <- outer(y, y, '-')
-    xx <- xx[row(xx) > col(xx)]
-    yy <- yy[row(yy) > col(yy)]
-    theta <- atan(yy/xx)
-    angle <- ifelse(theta >0, theta, theta + pi/2) #in/out angle
-    change<- ifelse(theta >0, 1, -1)
-    indx <- order(angle)
-    list (x= c(0, angle[indx])* 180/pi, 
-          y= (sum(theta<0) + c(0, cumsum(change[indx])))/ length(theta))
-}
-plot(zfun(arsenate$aas, arsenate$aes), type='l',
-     xlab="Angle", ylab="Fraction included")
-points(zfun(tdata$x, tdata$y))
-abline(.5,0)   
-
-
-###################################################
-### code chunk number 9: f7
+### code chunk number 8: f7
 ###################################################
 getOption("SweaveHooks")[["fig"]]()
 plot(new.lot ~ old.lot, data=ferritin2, subset=(period==2),

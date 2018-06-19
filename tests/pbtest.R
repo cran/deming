@@ -27,3 +27,7 @@ all.equal(coef(fit3), coef(fit))
 fit2 <- pbreg(y ~ x, pdata, method=2)
 temp <- tan(mean(c(atan(2.2/2), atan(4.3/4))))
 all.equal(as.vector(coef(fit2)), c(median(pdata$y- pdata$x*temp), temp))
+
+# test case with boot library
+# library(boot)
+# bfit <- pbreg(aes ~ aas, arsenate, method=3, nboot=500)

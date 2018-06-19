@@ -46,8 +46,14 @@ thielsen <- function(formula, data, subset, weights, na.action, conf=.95,
     if (nboot > 0) {
         # Set up for the wild bootstrap, which add random noise to
         #  the original x,y values
+        # "residuals" are orthagonal to the fitted line
+        # cos(theta) = 1/sqrt(1+ slope^2),  sin(theta) = slope/sqrt(1+slope^2)
         fcoef <- fit$coefficients
-        resid <- list(y= Y - yhat, x = X[,2] - (Y-fcoef[1])/fcoef[2])
+        d <- sqrt(1+ fcoef[2]^2)
+        u <- (X[2] + fcoef[2]*(Y - fcoef[1]))/d  #projection onto the fit
+        px <- u/d; py <- fcoef[1] + fcoef[2]*u/d
+        resid <- list(x= X[2]- px, y= Y- py)
+ 
         wild <- function(data, resid) {
             n <- length(data$x)
             rb <- matrix(rbinom(2*n, 1, prob=(sqrt(5)+1)/sqrt(20)), ncol=2)

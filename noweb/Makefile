@@ -27,7 +27,7 @@ deming.tex: demingsource.Rnw
 	cat deming.R >> $@
 
 clean:
-	-rm deming.log deming.aux deming.tex deming.pdf deming.R
+	-rm deming.log deming.aux deming.tex deming.R
 	-rm noweb.sty
 
 noweb.sty:

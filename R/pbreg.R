@@ -1,6 +1,5 @@
 pbreg <- function(formula, data, subset, weights, na.action, conf=.95,
-                  nboot=0, method=1,
-                  eps=sqrt(.Machine$double.eps),
+                  nboot=0, method=1, eps=sqrt(.Machine$double.eps),
                   x=FALSE, y=FALSE, model=TRUE) {
     Call <- match.call()
 
@@ -33,7 +32,6 @@ pbreg <- function(formula, data, subset, weights, na.action, conf=.95,
     if (!is.numeric(eps) || eps <=0) stop("invalid value for eps")
 
     if (conf <0 || conf >=1) stop("invalid confidence interval limit")
-
     if (conf !=0 && nboot==0 && any(wt != wt[1]))
         stop("with weighted data, a confidence interval requires bootstrap")
     
@@ -50,10 +48,13 @@ pbreg <- function(formula, data, subset, weights, na.action, conf=.95,
 
         # Set up for the wild bootstrap, which adds random noise to
         #  the original x,y values
+        # "residuals" are orthagonal to the fitted line
+        # cos(theta) = 1/sqrt(1+ slope^2),  sin(theta) = slope/sqrt(1+slope^2)
         fcoef <- fit$coefficients
-#        u <- (xx + fcoef[2]*(Y - fcoef[1]))/(1+ fcoef[2]^2) #projection onto fit
-#        resid <- list(x= u-xx, y=(fcoef[1] + fcoef[2]*u) - Y)
-        resid <- list(y=fit$residuals, x= xx - (Y-fcoef[1])/fcoef[2])
+        d <- sqrt(1+ fcoef[2]^2)
+        u <- (xx + fcoef[2]*(Y - fcoef[1]))/d  #projection onto fit
+        px <- u/d; py <- fcoef[1] + fcoef[2]*u/d
+        resid <- list(x= xx- px, y= Y- py)
 
         wild <- function(data, resid) {
             rb <- bfun(length(data$x))

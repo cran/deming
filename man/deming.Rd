@@ -9,7 +9,7 @@ special case of Deming regression.
 \usage{
 deming(formula, data, subset, weights, na.action, cv=FALSE,
        xstd, ystd, stdpat, conf=.95, jackknife=TRUE, dfbeta=FALSE,
-       x=FALSE, y=FALSE, model=TRUE)
+       id, x=FALSE, y=FALSE, model=TRUE)
 }
 \arguments{
   \item{formula}{a model formula with a single continuous response on the left
@@ -40,7 +40,9 @@ deming(formula, data, subset, weights, na.action, cv=FALSE,
     If this is missing the default is based on the \code{cv} option.}
   \item{conf}{confidence level for the confidence interval}
   \item{jackknife}{compute a jackknife estimate of variance.}
-  \item{dfbeta}{return the dfbeta matrix from the jackknife computation.}
+  \item{dfbeta}{return the dfbeta matrix from the jackknife
+    computation.}
+  \item{id}{grouping values for the grouped jackknife}
   \item{x,y, model}{logicals. If TRUE the corresponding components of the fit 
   (the model frame, the model matrix, or the response) is returned.}
 }
@@ -77,12 +79,21 @@ they will be based on the fitted values.  The two outcomes will often be
 nearly identical.
 
 Although a \code{cv} option of TRUE is often much better
-justified constant variance, the assumption of perfectly constant CV
-is questionable.  Most actual biologic assays will have both a constant and a
+justified than an assumption of constant variance,
+assumpting a perfectly constant CV can also be questionable.
+Most actual biologic assays will have both a constant and a
 proportional component of error, with the former becoming dominant for values
 near zero and the latter dominant elsewhere.
 If all of the results are far from zero, however, the constant part may
 be ignored.
+
+Many times an assay will be done in duplicate, in which case the paired
+results can have correlated errors due to sample handling or
+manipulation that preceeds splitting it into separate aliquots for
+assay, and the ordinary variance will be too small (as it also is when
+the duplicate values are averaged together before fitting the regression
+line.)  A correct grouped jackknife estimate of variance is obtained in
+this case by setting \code{id} to a vector of sample identifiers.
 }
 \value{
   a object of class 'deming' containing the components:

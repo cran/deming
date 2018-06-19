@@ -104,8 +104,9 @@ deming.fit1 <- function(x, y, wt, xstd, ystd, intercept) {
         b <- fit$min
     }
     else {
-        fit1 <- lm.wfit(x, y, wt/ystd^2)
-        fit2 <- lm.wfit(y, x, wt/xstd^2)
+        browser()
+        fit1 <- lm.wfit(as.matrix(x), y, wt/ystd^2)
+        fit2 <- lm.wfit(as.matrix(y), x, wt/xstd^2)
         init <- sort(c(.5*fit1$coef, 2/fit2$coef))
                      
         fit <- optimize(minfun0, init, x=x, y=y, wt=wt, 
@@ -187,13 +188,13 @@ creating a data frame.
 deming <-  function(formula, data, subset, weights, na.action,
                    cv=FALSE, xstd, ystd, stdpat,
                    conf= .95, jackknife=TRUE, dfbeta=FALSE,
-                   x=FALSE, y=FALSE, model=TRUE) {
+                   id, x=FALSE, y=FALSE, model=TRUE) {
     Call <- match.call()
     # create a call to model.frame() that contains the formula (required)
     #  and any other of the relevant optional arguments
     # then evaluate it in the proper frame
     indx <- match(c("formula", "data", "weights", "subset", "na.action",
-                    "xstd", "ystd"),
+                    "xstd", "ystd", "id"),
                   names(Call), nomatch=0) 
     if (indx[1] ==0) stop("A formula argument is required")
     temp <- Call[c(1,indx)]  # only keep the arguments we wanted
@@ -282,19 +283,27 @@ Jackknife or bootstrap estimates of error
 <<deming-se>>=
 if (conf>0 && jackknife) {
     # jackknife it
-    delta <- matrix(0., nrow=n, ncol=2)
-    for (i in 1:n) {
+    id <- model.extract(mf, "id")
+    if (is.null(id)) id <- 1:n  #leave them out individually
+    else id <- match(id, unique(id))
+
+    njack <- length(unique(id))
+    delta <- matrix(0., nrow=njack, ncol=2)
+    for (i in 1:njack) {
+        toss <- which(id== i)
         if (usepattern) 
-            tfit <-deming.fit2(xx[-i], Y[-i], wt[-i], stdpat,
+            tfit <-deming.fit2(xx[-toss], Y[-toss], wt[-toss], stdpat,
                                intercept= attr(Terms, "intercept")) 
         else
-            tfit <-deming.fit1(xx[-i], Y[-i], wt[-i], xstd[-i], ystd[-i],
+            tfit <-deming.fit1(xx[-toss], Y[-toss], wt[-toss],
+                               xstd[-toss], ystd[-toss],
                                intercept= attr(Terms, "intercept")) 
 
         delta[i,] <- fit$coefficients - tfit$coefficients
-        fit$variance <- t(delta) %*% delta
-        if (dfbeta) fit$dfbeta <- delta
-    }
+        }
+    fit$variance <- t(delta) %*% delta
+    if (dfbeta) fit$dfbeta <- delta
+    
     z <- -qnorm((1- conf)/2)
     se <- sqrt(diag(fit$variance))
     ci <- cbind(fit$coefficients - z*se,
