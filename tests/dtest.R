@@ -43,3 +43,14 @@ rotate <- function(theta, x, y) {
 lfit <- lm(y ~ x, data= rotate(atan(true), x, y))
 aeq(coef(lfit)[2], 0)
 
+
+# Regression through the origin
+
+dfit3 <- deming(y ~ x-1)
+ofun <- function(slope) {
+    theta <- atan(slope)
+    newdata <- rotate(theta, x, y)
+    mean(newdata$y^2)
+}
+ofit <- optimize(ofun, lower=.1, upper=3)
+aeq(dfit3$coef[2], ofit$minimum, tol=1e-5)

@@ -140,7 +140,6 @@ deming.fit1 <- function(x, y, wt, xstd, ystd, intercept) {
         b <- fit$min
     }
     else {
-        browser()
         fit1 <- lm.wfit(as.matrix(x), y, wt/ystd^2)
         fit2 <- lm.wfit(as.matrix(y), x, wt/xstd^2)
         init <- sort(c(.5*fit1$coef, 2/fit2$coef))

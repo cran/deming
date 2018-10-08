@@ -1,5 +1,11 @@
 \name{NEWS}
 \title{NEWS file for the deming package}
+\section{Changes in version 1.3}{
+  \itemize{
+    \item Version 1.2 had left a browser() call behind, which was
+    encountered when doing regression through the origin.  Pointed out
+    by Daniela Herold.  Add a no intercept regression to the test suite.
+}}
 \section{Changes in version 1.2}{
   \itemize{
     \item Add importFrom directive for calls to functions from "stats",
