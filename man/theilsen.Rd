@@ -1,11 +1,11 @@
-\name{thielsen}
-\alias{thielsen}
+\name{theilsen}
+\alias{theilsen}
 \title{Thiel-Sen regression}
 \description{
 Thiel-Sen regression is a robust regression method for two variables.
 The symmetric option gives a variant that is symmentric in x and y.}
 \usage{
-thielsen(formula, data, subset, weights, na.action, conf=.95,
+theilsen(formula, data, subset, weights, na.action, conf=.95,
      nboot = 0, symmetric=FALSE, eps=sqrt(.Machine$double.eps),
      x = FALSE, y = FALSE, model = TRUE)
 }
@@ -62,7 +62,7 @@ thielsen(formula, data, subset, weights, na.action, conf=.95,
   500-1000 replications.
 }
 \value{
-  thielsen returns an object of \code{class} "thielsen" with components
+  theilsen returns an object of \code{class} "theilsen" with components
   \item{coefficients}{the intercept and slope}
   \item{residuals}{residuals from the fitted line}
   \item{angle}{if the symmetric option is chosen, this contains all of the
@@ -91,8 +91,8 @@ Sen, P.B. (1968),
 \seealso{\code{\link{deming}}, \code{\link{pbreg}}}
 
 \examples{
-afit1 <- thielsen(aes ~ aas, symmetric=TRUE, data= arsenate)
-afit2 <- thielsen(aas ~ aes, symmetric=TRUE, data= arsenate)
+afit1 <- theilsen(aes ~ aas, symmetric=TRUE, data= arsenate)
+afit2 <- theilsen(aas ~ aes, symmetric=TRUE, data= arsenate)
 rbind(coef(afit1), coef(afit2))  # symmetric results
 1/coef(afit1)[2]
 }

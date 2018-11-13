@@ -1,4 +1,3 @@
-# Automatically generated from demingsource.Rnw using noweb
 deming <-  function(formula, data, subset, weights, na.action,
                    cv=FALSE, xstd, ystd, stdpat,
                    conf= .95, jackknife=TRUE, dfbeta=FALSE,
@@ -27,11 +26,6 @@ deming <-  function(formula, data, subset, weights, na.action,
     wt <- model.weights(mf)
     if (length(wt)==0) wt <- rep(1.0, n)
 
-    X <- model.matrix(Terms, mf)
-    if (ncol(X) != (1 + attr(Terms, "intercept"))) 
-        stop("Deming regression requires a single predictor variable")
-    xx <- X[,ncol(X)]  #actual regressor
-
     usepattern <- FALSE
     if (is.null(xstd)) {
         if (!is.null(ystd)) 
@@ -46,13 +40,7 @@ deming <-  function(formula, data, subset, weights, na.action,
         }
         if (stdpat[2] >0 || stdpat[4] >0) usepattern <- TRUE
         else {xstd <- rep(stdpat[1], n); ystd <- rep(stdpat[3], n)}
-        # add a check for users that apply the "cv" option to data that is
-        #  non-positive
-        if (stdpat[1]==0 & any(xx <=0)) 
-            stop("arguments imply a std which is <=0 for some x values")
-        if (stdpat[3]==0 & any(Y <=0))
-             stop("arguments imply a std which is <=0 for some y values")
-   } else  {
+    } else  {
         if (is.null(ystd))
             stop("both of xstd and ystd must be given, or neither")
         if (!is.numeric(xstd)) stop("xstd must be numeric")
@@ -60,10 +48,13 @@ deming <-  function(formula, data, subset, weights, na.action,
         if (any(xstd <=0)) stop("xstd must be positive")
         if (any(ystd <=0)) stop("ystd must be positive")
     }
-
     if (conf <0 || conf>=1) stop("invalid confidence level")
     if (!is.logical(dfbeta)) stop("dfbeta must be TRUE or FALSE")
     if (dfbeta & !jackknife) stop("the dfbeta option only applies if jackknife=TRUE")
+    X <- model.matrix(Terms, mf)
+    if (ncol(X) != (1 + attr(Terms, "intercept"))) 
+        stop("Deming regression requires a single predictor variable")
+    xx <- X[,ncol(X)]  #actual regressor
         
     if (!usepattern)
         fit <- deming.fit1(xx, Y, wt, xstd, ystd,

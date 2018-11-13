@@ -11,7 +11,7 @@
 \newcommand{\sign}{{\rm sign}}
 
 \SweaveOpts{keep.source=TRUE, width=7, height=5.2}
-%\VignetteIndexEntry{Deming and Passing-Bablock Regression}
+%\VignetteIndexEntry{Deming, Theil-Sen, and Passing-Bablock Regression}
 %\VignetteDependes{deming}
 
 \DefineVerbatimEnvironment{Sinput}{Verbatim} {xleftmargin=2em}
@@ -20,11 +20,17 @@
 \fvset{listparameters={\setlength{\topsep}{0pt}}}
 \renewenvironment{Schunk}{\vspace{\topsep}}{\vspace{\topsep}}
 
-\title{Deming, Theil-Sen, and Passing-Bablock Regression}
+\title{Total Least Squares: Deming, Theil-Sen, and Passing-Bablock Regression}
 \author{Terry Therneau\\ Mayo Clinic}
 
 \begin{document}
 \maketitle 
+<<f1, echo=FALSE>>=
+library(deming)
+options(continue="  ", width=60)
+options(SweaveHooks=list(fig=function() par(mar=c(5.1, 4.1, .3, 1.1))))
+@ 
+
 \section{Introduction}
 The methods in the \emph{deming} package are concerned with the
 problem of comparing two assays, both of which are measured with
@@ -45,9 +51,20 @@ is unsatisfactory since it is asymmetric.
 The fitted lines for $y \sim x$ and $x \sim y$ are not the same,
 and neither has an expected slope of 1 when $\beta=1$.
 
-\section{Generalized Deming Regression}
 \begin{figure}[t]
-  \myfig{deming-f1}
+<<fig=TRUE, echo=FALSE>>=
+tdata <- data.frame(x=1:6, y=c(2.3,1.3, 4.1,3.5,6.3, 3))
+lfit <- lm(y ~ x, tdata)      # y on x
+dfit <- deming(y ~ x, tdata)  # Deming
+lfit2 <- lm(x ~ y, tdata)     # x on y
+
+with(tdata, plot(x, y, xlim=c(0,7), ylim=c(1,7)))
+abline(lfit)
+abline(-lfit2$coef[1]/lfit2$coef[2], 1/lfit2$coef[2], col=4, lty=2)
+abline(dfit, col=2, lwd=2)
+segments(tdata$x, tdata$y, tdata$x, predict(lfit), col=1, lty=1)  
+segments(tdata$x, tdata$y, predict(lfit2), tdata$y, col=4, lty=2)
+@ 
   \caption{Example of linear and deming regression applied to
     a simple data set.  The ordinary linear regression of y on x (black)
     minimizes the sum of squared vertical distances.
@@ -56,6 +73,7 @@ and neither has an expected slope of 1 when $\beta=1$.
     sum of orthagonal distances between the points and the line.}
     \label{f1}
 \end{figure}
+
 Least squares regression of $y$ on $x$ assumes that the $x$ variate
 is measured without error, and minimizes the sum of squared vertical
 distance between the data points $y$ and the fitted regression line.
@@ -65,18 +83,25 @@ horizontal + vertical distances to the predicted values.
 However the idea of Adcock remained largely unnoticed for 
 more than 50 years, until it
 was widely propogated in the book by Deming \cite{Deming43}.
-The latter has become so well known that the common label for the
-method is ``Deming regression'' in nearly all fields in which it is used.
+The latter has become so well known that a common label for the
+method is ``Deming regression'' in many fields.
+Figure \ref{f1} shows a typical case.
 
-<<f1, echo=FALSE, fig=TRUE, include=FALSE>>=
-library(deming)
-options(continue="  ", width=60)
-options(SweaveHooks=list(fig=function() par(mar=c(5.1, 4.1, .3, 1.1))))
+An almost entirely separate discussion of the same issue is found under
+the label ``total least squares'' (TLS), which is where one will find most
+of the modern literature on this topic.   
+Markovsky and Van Huffel \cite{Markovsky07} present a good overview of the
+area, which has a rich literature of algorithms and extensions.
+They catalog multiple discoveries of the approach across different
+fields.
 
+The code for figure \ref{f1}.
+
+<<f1b, echo=TRUE, fig=TRUE, include=FALSE>>= 
 tdata <- data.frame(x=1:6, y=c(2.3,1.3, 4.1,3.5,6.3, 3))
-lfit <- lm(y ~ x, tdata)
-dfit <- deming(y ~ x, tdata)
-lfit2 <- lm(x ~ y, tdata)
+lfit <- lm(y ~ x, tdata)      # y on x
+dfit <- deming(y ~ x, tdata)  # Deming
+lfit2 <- lm(x ~ y, tdata)     # x on y
 
 with(tdata, plot(x, y, xlim=c(0,7), ylim=c(1,7)))
 abline(lfit)
@@ -86,13 +111,34 @@ segments(tdata$x, tdata$y, tdata$x, predict(lfit), col=1, lty=1)
 segments(tdata$x, tdata$y, predict(lfit2), tdata$y, col=4, lty=2)
 @ 
 
-There are a number of alternate ways to compute this regression
+\section{Generalized Deming regression}
+
+There are a number of alternate ways to compute the Deming regression
 line. The Deming line will be the first
 principle component of the centered data, the first eignevector of the 
 matrix $Z$ whose 2 columns are the centered $x$ and $y$ vectors, or
 the first component of a singular value decomposition or factor analysis of $Z$.
 A partial least squares (PLS) or structural equation modeling (SEM)  model 
 fit to $x$ and $y$ will also recover the Deming estimate of slope.
+
+In the TLS literature both $X$ and $Y$ can be matrices, and the most
+straightforward approach is to obtain the singular value decompostition
+$$
+   (X, Y) = UDV'
+$$ 
+where $D$ is the diagonal matrix of singular values. 
+Assume $X$ is of dimension $n$ by $p$ and partion $V$ as 
+\begin{equation}
+  V = \left[ \begin{array}{cc} V_{11} V_{12}\\ V_{21} V_{22} \end{array} \right]
+\end{equation}
+Then if $V_{22}$ is non-singular a solution exists with 
+$\hat\beta = -V_{12}V_{xx}^{-1}$.
+A solution will not exist when a coefficient is infinite, i.e.,  if the best 
+fitting line is vertical in one of the $p$ dimensions.
+The solution will be unique if $d_p > d_{p+1}$.  
+The counterexample to uniqueness is when the data lies on a circle, then the
+variance explained by any regression line will be the same as
+any other, and $d_p = d_{p+1}$.
 
 There would appear to be little need for yet another program to compute
 this quantity other than providing a recognizable name to search for in the
@@ -103,7 +149,8 @@ Returning to our original definitions \eqref{basic1} and \eqref{basic2},
 ordinary Deming regression is based on the assumtion that that the assay errors
 $\epsilon$ and $\delta$ are equal in magnitude for the two assays
 and are constant across the range of $u$.
-This latter is rarely if ever true for biologic assays.
+This latter is rarely if ever true for biologic assays, and both will
+normally be false in more general applications.
 
 \begin{figure}
   \myfig{deming-f2}
@@ -157,8 +204,8 @@ Referring again to equations \eqref{basic1} and \eqref{basic2},
 assume that $x$ and $y$ both estimate the common unknown quantity
 $u$, and the error terms have standard deviations
 \begin{align}
-  {\rm sd}(x) &= \sigma[e + fu] = {\rm sd}\epsilon \\
-  {\rm sd}(y) &= \sigma[g + hu] = {\rm sd}\delta
+  {\rm sd}(x) &= \sigma[e + fu] \\
+  {\rm sd}(y) &= \sigma[g + hu]
 \end{align}
 for known constants $e$, $f$, $g$, and $h$ and an unknown scale factor
 $\sigma$, where $u$ is again the true value. 
@@ -233,6 +280,7 @@ predominant while for those above 2 the proportional part dominates.
 Calibration fits that do or do not properly account for the error
 differ by important amounts.
 
+
 \section{Theil-Sen Regression}
 One interesting way to characterize the slope of least squares regression line
 is that it is the solution of $\rho(x,r(\beta)) =0$,
@@ -248,7 +296,7 @@ and almost completely unknown in others.
 It has strong resistance to outliers and nearly full efficiency compared to
 linear regression when the errors are Gaussian.
 
-One way to calculate the TS regression is to first
+The standard way to calculate TS regression is to first
 draw a line segment between each of the $n(n-1)/2$ unique pairs of points in
 the data; the TS slope estimate is the median of these $n(n-1)/2$ slope values.
 Once the slope is established the intercept is chosen so that the median 
@@ -271,7 +319,7 @@ yy <- c(yy[row(yy) != col(yy)])
 plot(xx, yy,
      xlab="Paired x difference", ylab="Paired y difference")
 abline(v=0)
-fit <- thielsen(y ~ x, tdata)
+fit <- theilsen(y ~ x, tdata)
 abline(0, coef(fit)[2], col=2)
 text(c(2 ,4, -2, -3), c(5, -4, -5, 4), c("I", "II", "III", "IV"))
 @ 
@@ -440,7 +488,7 @@ Since they are are iterative the
 Kendall's tau which forms the basis for Sen's argument no longer holds.
 Secondly,
 extending the Sen variance formula to data with case weights is far from clear. 
-The \code{pbreg} and \code{thielsen} routines therefore
+The \code{pbreg} and \code{theilsen} routines therefore
 also include an option for bootstrap confidence
 intervals, and we recommend using it whenever there are case weights or
 for the STS, PB2, and PB3 estimators.
@@ -506,7 +554,11 @@ would accumulate over time.
     Estimation of the linear relationship between the
     measurements of two methods with proportional errors.  
     Statistics in Medicine 9:1463-1473.
-
+    
+  \bibitem{Markovsky07} I. Markovsky and S. Van Huffel (2007).
+    Overview of total least squares methods. 
+    Signal Processing, 87:2283--2302.  
+  
   \bibitem{Passing83} Passing, H. and Bablock, W. (1983).
     A new biometrical procedure for testing the equality of measurements 
     from two different analytical methods. Application of linear 
@@ -529,7 +581,6 @@ would accumulate over time.
   \bibitem{Ripley87} Ripley, B. D. and Thompson, M. (1987), 
     Regression techniques for the detection
     of analytical bias, Analyst 112:377-383.
-    
     
   \bibitem{Sen68} Sen, P.B. (1968), 
     Estimates of the regression coefficient based on Kendall's tau,

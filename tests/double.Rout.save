@@ -41,9 +41,9 @@ Loading required package: boot
 > data3 <- data1[rep(1:20, 2),]
 > data1$wt2 <- rep(2,20)
 > for (sym in c(FALSE, TRUE)) {
-+     fit3a <- thielsen(new.lot ~ old.lot, data1, weight=wt2, conf=0, 
++     fit3a <- theilsen(new.lot ~ old.lot, data1, weight=wt2, conf=0, 
 +                       symmetric=sym)
-+     fit3b <- thielsen(new.lot ~ old.lot, data3, conf=0, symmetric=sym)
++     fit3b <- theilsen(new.lot ~ old.lot, data3, conf=0, symmetric=sym)
 +     print(all.equal(coef(fit3a), coef(fit3b)))
 + }
 [1] TRUE

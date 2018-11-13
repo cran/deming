@@ -1,5 +1,5 @@
 # Function for Theil-Sen regression
-thielsen <- function(formula, data, subset, weights, na.action, conf=.95,
+theilsen <- function(formula, data, subset, weights, na.action, conf=.95,
                   nboot=0, symmetric=FALSE, 
                   eps=sqrt(.Machine$double.eps),
                   x=FALSE, y=FALSE, model=TRUE) {
@@ -19,7 +19,7 @@ thielsen <- function(formula, data, subset, weights, na.action, conf=.95,
     X <- model.matrix(Terms, mf)
     if (!attr(Terms, "intercept")) stop ("an intercept is required")
     if (ncol(X) != 2) 
-        stop("Thiel-Sen regression requires a single predictor variable")
+        stop("Theil-Sen regression requires a single predictor variable")
 
     Y <- model.response(mf, type="numeric")
     n <- length(Y)
@@ -88,13 +88,13 @@ thielsen <- function(formula, data, subset, weights, na.action, conf=.95,
     na.action <- attr(mf, "na.action")
     if (length(na.action)) fit$na.action <- na.action
     fit$terms <- Terms
-    class(fit) <- c("thielsen") 
+    class(fit) <- c("theilsen") 
     fit$call <- Call
     fit
 }
 
 
-print.thielsen <- function(x, ...) {
+print.theilsen <- function(x, ...) {
     cat("\nCall:\n", deparse(x$call), "\n\n", sep = "")
     cat("n=", x$n)
     if (length(x$na.action))
