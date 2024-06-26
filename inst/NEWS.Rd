@@ -1,5 +1,9 @@
 \name{NEWS}
 \title{NEWS file for the deming package}
+\section{Changes in version 1.4-1}{
+  \itemize{
+    \item Fix a few errors in the documentation and help files.
+}}
 \section{Changes in version 1.4}{
   \itemize{
     \item Major user visible change: Tor Wentzel-Larsen gently pointed

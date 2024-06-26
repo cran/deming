@@ -93,7 +93,7 @@ of the modern literature on this topic.
 Markovsky and Van Huffel \cite{Markovsky07} present a good overview of the
 area, which has a rich literature of algorithms and extensions.
 They catalog multiple discoveries of the approach across different
-fields.
+fields.  (Interestingly, Deming is not listed in their bibliography.)
 
 The code for figure \ref{f1}.
 

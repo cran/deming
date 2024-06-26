@@ -1,6 +1,6 @@
 \name{theilsen}
 \alias{theilsen}
-\title{Thiel-Sen regression}
+\title{Theil-Sen regression}
 \description{
 Thiel-Sen regression is a robust regression method for two variables.
 The symmetric option gives a variant that is symmentric in x and y.}

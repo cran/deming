@@ -68,13 +68,13 @@ variation rather than constant variance.
 There are 3 ways to specify the variation.  The first is to directly
 set the pattern of (c,d,e,f) for the $x$ and $y$ standard deviations.
 If this is omitted, a default of (0,1,0,1) or (1,0,1,0) is chosen, based
-on whether the code{cv} option is TRUE or FALSE, respectively.
+on whether the \code{cv} option is TRUE or FALSE, respectively.
 As a third option, the user can specifiy \code{xstd} and \code{ystd}
 directly as vectors of data values.  In this last case any values for
 the \code{stdpat} or \code{ccs} options are ignored.
 Note that the two calls \code{deming(y ~ x, cv=TRUE)} and
-\code{deming(y ~ x, xstd=x, ystd=y)} are subtly different.  In the first
-the standard deviation values are based on the data, and in the second
+\code{deming(y ~ x, xstd=x, ystd=y)} are subtly different.  In the second
+the standard deviation values are based on the data, and in the first
 they will be based on the fitted values.  The two outcomes will often be
 nearly identical.
 
@@ -132,4 +132,5 @@ plot(1:30, fit$dfbeta[,2]) #subject 22 has a large effect on the slope
 fit2 <- deming(new.lot ~ old.lot, ferritin, cv=TRUE,
                 subset=(period==3))
 }
-\keyword{models, regression}
+\keyword{models}
+\keyword{regression}
